@@ -10,8 +10,11 @@ COPY package*.json ./
 # Install Python and build tools to compile sqlite3 from source
 RUN apt-get update && apt-get install -y python3 make g++ && rm -rf /var/lib/apt/lists/*
 
-# Install dependencies and force building sqlite3 from source
-RUN npm ci --omit=dev --build-from-source=sqlite3
+# Install dependencies normally first
+RUN npm ci --omit=dev
+
+# Explicitly force sqlite3 to rebuild from source using the container's GLIBC
+RUN npm rebuild sqlite3 --build-from-source
 
 # Bundle your app's source code inside the Docker image
 COPY . .
