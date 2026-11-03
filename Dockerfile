@@ -1,20 +1,19 @@
-# Use the Node 22 Alpine image (uses musl instead of glibc)
-FROM node:22-alpine
+FROM --platform=linux/amd64 node:22-alpine
 
-# Create app directory inside the container
 WORKDIR /usr/src/app
 
-# Copy package.json and package-lock.json
+# Tools required to compile native modules such as sqlite3
+RUN apk add --no-cache python3 make g++
+
+# Copy dependency files first for Docker layer caching
 COPY package*.json ./
 
-# Install dependencies (this will download Alpine-specific binaries, avoiding GLIBC issues)
-RUN npm ci --omit=dev
+# Force sqlite3 to compile inside this exact Alpine environment
+RUN npm ci --omit=dev --build-from-source=sqlite3
 
-# Bundle your app's source code inside the Docker image
+# Copy application source
 COPY . .
 
-# Your app binds to port 3001, so we expose it
 EXPOSE 3001
 
-# Define the command to run your app
-CMD [ "npm", "start" ]
+CMD ["npm", "start"]
